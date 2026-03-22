@@ -1,0 +1,145 @@
+# WeAct Studio STM32H723VGT6 ArduPilot Flight Controller
+# Board: https://github.com/WeActStudio/WeActStudio.MiniSTM32H723
+# Guide: See docs/WeActH723_ArduPilot_Guide_v1.1.docx
+#
+# ┌─────────────────────────────────────────────────────────┐
+# │  Hardware Connections                                     │
+# │  IMU:   MPU9250  SPI1  PA4=CS PA5=SCK PA6=MISO PA7=MOSI │
+# │  BARO:  BMP280   I2C1  PB6=SCL PB7=SDA  addr=0x76       │
+# │  USB:   OTG_HS FS      PA11=DM PA12=DP  (AF10)           │
+# │  SD:    SDMMC1         PC8-PC12 PD2  onboard slot        │
+# └─────────────────────────────────────────────────────────┘
+#
+# Serial Ports:
+#   Serial0 = USB           MAVLink / GCS
+#   Serial1 = USART1 PA9/PA10   GPS (9600 baud default)
+#   Serial2 = USART2 PA2/PA3   Telemetry radio
+#   Serial3 = UART4  PB8/PB9   RC Receiver (ELRS/SBUS/CRSF)
+#
+# Motor Outputs (X-frame quad uses M1-M4):
+#   M1=PA0(TIM2) M2=PA1(TIM2) M3=PA8(TIM1) M4=PB1(TIM3)
+#   M5=PC6(TIM8) M6=PC7(TIM8) M7=PD12(TIM4) M8=PD13(TIM4)
+#
+# External Compass: I2C2 on PB10(SCL) / PB11(SDA)
+
+MCU STM32H7xx STM32H723xx
+OSCILLATOR_HZ 25000000
+FLASH_SIZE_KB 1024
+APJ_BOARD_ID 1023
+
+# Flash layout (8 sectors x 128KB each):
+#   Sector 0  (0x08000000, 128KB): Bootloader
+#   Sectors 1-5 (0x08020000, 640KB): Firmware
+#   Sectors 6-7 (0x080C0000, 256KB): Parameter storage
+FLASH_RESERVE_START_KB 128
+STORAGE_FLASH_PAGE 6
+define HAL_STORAGE_SIZE 16384
+
+# ── USB ──────────────────────────────────────────────────────────────────────
+# STM32H723 uses OTG_HS peripheral on PA11/PA12 in Full-Speed mode
+# Pins need AF10. No external ULPI PHY - internal FS PHY used.
+# WeAct board does not connect VBUS sense (PA9) so disable VBUS sensing.
+PA11 OTG_FS_DM OTG1
+PA12 OTG_FS_DP OTG1
+define BOARD_OTG_NOVBUSSENS 1
+
+# ── SERIAL PORTS ─────────────────────────────────────────────────────────────
+PA9  USART1_TX USART1
+PA10 USART1_RX USART1
+PA2  USART2_TX USART2
+PA3  USART2_RX USART2
+PB8  UART4_RX UART4 NODMA
+PB9  UART4_TX UART4 NODMA
+SERIAL_ORDER OTG1 USART1 USART2 UART4
+
+# ── IMU: MPU9250 on SPI1 ─────────────────────────────────────────────────────
+# NOTE: WeAct board has onboard 8MB SPI flash also on SPI1 (PA5-PA7).
+# Disconnect or disable onboard flash (SB3 solder bridge) when using
+# external IMU on SPI1.
+PA5 SPI1_SCK SPI1
+PA6 SPI1_MISO SPI1
+PA7 SPI1_MOSI SPI1
+PA4 MPU9250_CS CS
+PB0 MPU9250_DRDY INPUT
+SPIDEV mpu9250 SPI1 DEVID1 MPU9250_CS MODE3 2*MHZ 8*MHZ
+IMU Invensense SPI:mpu9250 ROTATION_NONE
+
+# ── BAROMETER: BMP280 on I2C1 ────────────────────────────────────────────────
+PB6 I2C1_SCL I2C1
+PB7 I2C1_SDA I2C1
+I2C_ORDER I2C1 I2C2
+BARO BMP280 I2C:0:0x76
+
+# ── EXTERNAL COMPASS: I2C2 ───────────────────────────────────────────────────
+# Connect compass module: PB10=SCL, PB11=SDA, 3.3V, GND
+# Supported: QMC5883L(0x0D), HMC5883L(0x1E), IST8310(0x0C), LIS3MDL
+PB10 I2C2_SCL I2C2
+PB11 I2C2_SDA I2C2
+define HAL_PROBE_EXTERNAL_I2C_COMPASSES 1
+define AP_COMPASS_AK8963_ENABLED 1
+define AP_COMPASS_HMC5843_ENABLED 1
+define AP_COMPASS_QMC5883L_ENABLED 1
+define AP_COMPASS_IST8310_ENABLED 1
+
+# ── ADC: Battery monitoring ───────────────────────────────────────────────────
+PC0 BATT_VOLTAGE_SENS ADC1 SCALE(1)
+PC1 BATT_CURRENT_SENS ADC1 SCALE(1)
+
+# ── PWM MOTOR OUTPUTS ────────────────────────────────────────────────────────
+# Standard X-frame quad: M1=Front-Right(CCW) M2=Rear-Left(CCW)
+#                        M3=Front-Left(CW)   M4=Rear-Right(CW)
+PA0  TIM2_CH1 TIM2 PWM(1) GPIO(50)
+PA1  TIM2_CH2 TIM2 PWM(2) GPIO(51)
+PA8  TIM1_CH1 TIM1 PWM(3) GPIO(52)
+PB1  TIM3_CH4 TIM3 PWM(4) GPIO(53)
+PC6  TIM8_CH1 TIM8 PWM(5) GPIO(54)
+PC7  TIM8_CH2 TIM8 PWM(6) GPIO(55)
+PD12 TIM4_CH1 TIM4 PWM(7) GPIO(56)
+PD13 TIM4_CH2 TIM4 PWM(8) GPIO(57)
+
+# ── SD CARD: SDMMC1 onboard MicroSD slot ─────────────────────────────────────
+# Format card as FAT32 before use
+PC8  SDMMC1_D0  SDMMC1
+PC9  SDMMC1_D1  SDMMC1
+PC10 SDMMC1_D2  SDMMC1
+PC11 SDMMC1_D3  SDMMC1
+PC12 SDMMC1_CK  SDMMC1
+PD2  SDMMC1_CMD SDMMC1
+define HAL_OS_FATFS_IO 1
+
+# ── FIRMWARE VALIDATION ───────────────────────────────────────────────────────
+# Required so bootloader can verify and jump to firmware
+define AP_CHECK_FIRMWARE_ENABLED 1
+
+# ── 1MB FLASH SIZE REDUCTION ─────────────────────────────────────────────────
+# Firmware must fit in sectors 1-5 = 640KB
+# Uses same pattern as Pixhawk1-1M, SpeedyBee F4V3
+include ../include/minimize_features.inc
+
+# Additional reductions for H723 1MB constraint:
+define HAL_NAVEKF2_AVAILABLE 0
+define HAL_NAVEKF3_AVAILABLE 0
+define AP_SCRIPTING_ENABLED 0
+define HAL_LOGGING_ENABLED 0
+define AP_COMPASS_BACKEND_DEFAULT_ENABLED 0
+define AP_COMPASS_EXTERNALAHRS_ENABLED 0
+define HAL_EXTERNAL_AHRS_ENABLED 0
+define AP_VOLZ_ENABLED 0
+define HAL_SUPPORT_RCOUTPUT_SERIAL 0
+define AP_MOTORS_FRAME_DEFAULT_ENABLED 0
+define AP_MOTORS_FRAME_QUAD_ENABLED 1
+define AP_MOTORS_FRAME_HEXA_ENABLED 1
+define AP_MOTORS_FRAME_OCTA_ENABLED 1
+define HAL_RALLY_ENABLED 0
+define AP_ICENGINE_ENABLED 0
+define AP_ADVANCEDFAILSAFE_ENABLED 0
+define AC_PRECLAND_ENABLED 0
+define AP_SBUSOUTPUT_ENABLED 0
+define HAL_PARACHUTE_ENABLED 0
+define HAL_BUTTON_ENABLED 0
+define AP_OPTICALFLOW_ENABLED 0
+define MODE_ACRO_ENABLED 0
+define MODE_DRIFT_ENABLED 0
+define MODE_FLIP_ENABLED 0
+define HAL_SPEKTRUM_TELEM_ENABLED 0
+define HAL_CRSF_TELEM_ENABLED 0
