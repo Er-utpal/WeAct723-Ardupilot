@@ -131,9 +131,9 @@ pip install empy==3.3.4 pexpect future pymavlink MAVProxy
 
 ```bash
 cd ~/ardupilot
-git clone https://github.com/YOUR_USERNAME/WeActH723-ArduPilot.git
+git clone https://github.com/Er-utpal/WeAct723-ArduPilot.git
 
-bash WeActH723-ArduPilot/scripts/apply_patches.sh
+bash WeAct723-ArduPilot/scripts/apply_patches.sh
 ```
 
 > **Note:** The `patches/` directory must contain patch files generated with `scripts/generate_patches.sh`. See [patches/README.md](patches/README.md) for manual patch instructions.
