@@ -1,0 +1,89 @@
+diff --git a/libraries/AP_HAL_ChibiOS/hwdef/common/stm32h7_type2_mcuconf.h b/libraries/AP_HAL_ChibiOS/hwdef/common/stm32h7_type2_mcuconf.h
+index 8c02c83784..df552ad5ef 100644
+--- a/libraries/AP_HAL_ChibiOS/hwdef/common/stm32h7_type2_mcuconf.h
++++ b/libraries/AP_HAL_ChibiOS/hwdef/common/stm32h7_type2_mcuconf.h
+@@ -140,6 +140,24 @@
+ #define STM32_PLLSRC                        STM32_PLLSRC_HSE_CK
+ #define STM32_CKPERSEL                      STM32_CKPERSEL_HSE_CK
+ 
++
++#elif STM32_HSECLK == 25000000U
++/*
++  25 MHz HSE crystal - WeAct Studio STM32H723VGT6 and similar boards
++  PLL1: DIVM1=5 -> VCO_in=5MHz, MULN1=104 -> VCO_out=520MHz, DIVP1=1 -> SYSCLK=520MHz
++  PLL2: DIVM2=5 -> VCO_in=5MHz, MULN2=160 -> VCO_out=800MHz
++        DIVP2=3 -> 266MHz, DIVQ2=10 -> 80MHz (FDCAN), DIVR2=2 -> 400MHz
++  PLL3: DIVM3=5 -> VCO_in=5MHz, MULN3=80  -> VCO_out=400MHz
++        DIVP3=2 -> 200MHz (SPI123), DIVQ3=2 -> 200MHz, DIVR3=4 -> 100MHz (I2C/ADC)
++*/
++#define STM32_HSE_ENABLED                   TRUE
++#define STM32_HSI_ENABLED                   FALSE
++#define STM32_PLL1_DIVM_VALUE               5
++#define STM32_PLL2_DIVM_VALUE               5
++#define STM32_PLL3_DIVM_VALUE               5
++#define STM32_PLLSRC                        STM32_PLLSRC_HSE_CK
++#define STM32_CKPERSEL                      STM32_CKPERSEL_HSE_CK
++
+ #else
+ #error "Unsupported HSE clock"
+ #endif
+@@ -174,6 +192,29 @@
+ #define STM32_PLL3_DIVN_VALUE               192
+ #define STM32_PLL3_DIVQ_VALUE               2
+ #define STM32_PLL3_DIVR_VALUE               4
++
++#elif STM32_HSECLK == 25000000U
++// 25MHz HSE -> 400MHz SYSCLK (matches HAL_EXPECTED_SYSCLOCK for type2 H7)
++// PLL1: 25/5=5MHz VCO_in, 5*80=400MHz VCO_out, /1=400MHz SYSCLK
++#define STM32_PLL1_DIVN_VALUE               80
++#define STM32_PLL1_DIVP_VALUE               1
++#define STM32_PLL1_DIVQ_VALUE               6
++#define STM32_PLL1_DIVR_VALUE               4
++
++// PLL2: 25/5=5MHz VCO_in, 5*128=640MHz VCO_out
++// /3=213MHz, /8=80MHz (FDCAN), /2=320MHz
++#define STM32_PLL2_DIVN_VALUE               128
++#define STM32_PLL2_DIVP_VALUE               3
++#define STM32_PLL2_DIVQ_VALUE               8
++#define STM32_PLL2_DIVR_VALUE               2
++
++// PLL3: 25/5=5MHz VCO_in, 5*76=380MHz VCO_out
++// /2=190MHz (SPI123), /2=190MHz, /4=95MHz (I2C/ADC)
++#define STM32_PLL3_DIVN_VALUE               76
++#define STM32_PLL3_DIVP_VALUE               2
++#define STM32_PLL3_DIVQ_VALUE               2
++#define STM32_PLL3_DIVR_VALUE               4
++
+ #endif // clock selection
+ 
+ /*
+@@ -327,15 +368,26 @@
+ #define STM32_ADC_COMPACT_SAMPLES           FALSE
+ #define STM32_ADC_USE_ADC12                 TRUE
+ #define STM32_ADC_ADC12_DMA_PRIORITY        2
++// ADC3 does not exist on STM32H723 (only H743 has ADC3)
++// Disable ADC3 to prevent ADCD3 undeclared errors
++#ifndef STM32H723_MCUCONF
+ #define STM32_ADC_ADC3_DMA_PRIORITY         2
+-#define STM32_ADC_ADC12_IRQ_PRIORITY        5
+ #define STM32_ADC_ADC3_IRQ_PRIORITY         5
+-#define STM32_ADC_ADC12_CLOCK_MODE          ADC_CCR_CKMODE_ADCCK
+-#define STM32_ADC_ADC3_CLOCK_MODE           ADC_CCR_CKMODE_ADCCK
++#endif
++#define STM32_ADC_ADC12_IRQ_PRIORITY        5
++#ifndef STM32_ADC_ADC12_CLOCK_MODE
++#define STM32_ADC_ADC12_CLOCK_MODE          ADC_CCR_CKMODE_AHB_DIV4
++#endif
++// ADC3 clock mode only for MCUs that have ADC3
++#if !defined(STM32H723_MCUCONF) && !defined(STM32_ADC_ADC3_CLOCK_MODE)
++#define STM32_ADC_ADC3_CLOCK_MODE           ADC_CCR_CKMODE_AHB_DIV4
++#endif
+ 
+ // we call it ADC1 in hwdef.dat, but driver uses ADC12 for DMA stream
+ #ifdef STM32_ADC_ADC1_DMA_STREAM
++#ifndef STM32_ADC_ADC12_DMA_STREAM
+ #define STM32_ADC_ADC12_DMA_STREAM STM32_ADC_ADC1_DMA_STREAM
++#endif
+ #elif defined(STM32_ADC_ADC2_DMA_STREAM)
+ #define STM32_ADC_ADC12_DMA_STREAM STM32_ADC_ADC2_DMA_STREAM
+ #endif

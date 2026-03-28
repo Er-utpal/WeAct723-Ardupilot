@@ -1,0 +1,13 @@
+diff --git a/os/hal/ports/STM32/LLD/OTGv1/hal_usb_lld.c b/os/hal/ports/STM32/LLD/OTGv1/hal_usb_lld.c
+index 92ec50716..584214b2f 100644
+--- a/os/hal/ports/STM32/LLD/OTGv1/hal_usb_lld.c
++++ b/os/hal/ports/STM32/LLD/OTGv1/hal_usb_lld.c
+@@ -32,7 +32,7 @@
+ /* Driver local definitions.                                                 */
+ /*===========================================================================*/
+ 
+-#define TRDT_VALUE_FS           5
++#define TRDT_VALUE_FS           9
+ #define TRDT_VALUE_HS           9
+ 
+ #define EP0_MAX_INSIZE          64

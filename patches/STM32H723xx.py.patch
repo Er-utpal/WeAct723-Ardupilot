@@ -1,0 +1,35 @@
+diff --git a/libraries/AP_HAL_ChibiOS/hwdef/scripts/STM32H723xx.py b/libraries/AP_HAL_ChibiOS/hwdef/scripts/STM32H723xx.py
+index 7be3c8406a..6424a14a4d 100644
+--- a/libraries/AP_HAL_ChibiOS/hwdef/scripts/STM32H723xx.py
++++ b/libraries/AP_HAL_ChibiOS/hwdef/scripts/STM32H723xx.py
+@@ -26,8 +26,8 @@ mcu = {
+     # flags of 2 means faster memory for CPU intensive work
+     # flags of 4 means memory can be used for SDMMC DMA
+     'RAM_MAP' : [
+-        (0x20000000, 128, 2), # DTCM
+-        (0x24000000, 128, 4), # AXI SRAM.
++        (0x24000000, 320, 4), # AXI SRAM - main RAM (must be first for ram0)
++        (0x20000000, 128, 2), # DTCM - fast tightly coupled, no DMA
+         (0x00000400,  63, 2), # ITCM (first 1k removed, to keep address 0 unused)
+         (0x30000000, 32, 8), # SRAM1, SRAM2
+         (0x38000000, 16, 1), # SRAM4
+@@ -267,7 +267,8 @@ AltFunction_map = {
+ 	"PA10:TIM1_CH3"     	:	1,
+ 	"PA10:USART1_RX"    	:	7,
+ 	"PA10:USB_OTG_HS_ID"	:	10,
+-    "PA11:OTG_HS_DM"		:   0,
++    "PA11:OTG_HS_DM"		:   10,
++    "PA11:OTG_FS_DM"		:   10,
+     "PA11:EVENTOUT"     	:	15,
+ 	"PA11:CAN1_RX"    	:	9,
+ 	"PA11:I2S2_WS"      	:	5,
+@@ -278,7 +279,8 @@ AltFunction_map = {
+ 	"PA11:UART4_RX"     	:	6,
+ 	"PA11:USART1_CTS"   	:	7,
+ 	"PA11:USART1_NSS"   	:	7,
+-    "PA12:OTG_HS_DP"		:   0,
++    "PA12:OTG_HS_DP"		:   10,
++    "PA12:OTG_FS_DP"		:   10,
+     "PA12:EVENTOUT"     	:	15,
+ 	"PA12:CAN1_TX"    	:	9,
+ 	"PA12:I2S2_CK"      	:	5,

@@ -1,0 +1,26 @@
+diff --git a/libraries/AP_HAL_ChibiOS/hwdef/common/board.c b/libraries/AP_HAL_ChibiOS/hwdef/common/board.c
+index 618fe597ac..2c0e865069 100644
+--- a/libraries/AP_HAL_ChibiOS/hwdef/common/board.c
++++ b/libraries/AP_HAL_ChibiOS/hwdef/common/board.c
+@@ -350,4 +350,21 @@ bool mmc_lld_is_write_protected(MMCDriver *mmcp) {
+  */
+ void boardInit(void) {
+   HAL_BOARD_INIT_HOOK_CALL
++
++#if defined(STM32H723xx) || defined(STM32H7xx)
++  /*
++   * Full USB OTG_HS peripheral reset to clear any state left by bootloader
++   */
++  RCC->AHB1RSTR |= RCC_AHB1RSTR_USB1OTGHSRST;
++  volatile uint32_t dummy = RCC->AHB1RSTR;
++  (void)dummy;
++  RCC->AHB1RSTR &= ~RCC_AHB1RSTR_USB1OTGHSRST;
++
++  /*
++   * Enable CRS (Clock Recovery System) to sync HSI48 to USB SOF.
++   */
++  RCC->APB1HENR |= RCC_APB1HENR_CRSEN;
++  CRS->CFGR = (2U << 28);  /* SYNCSRC = USB SOF */
++  CRS->CR |= CRS_CR_AUTOTRIMEN | CRS_CR_CEN;
++#endif
+ }

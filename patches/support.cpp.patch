@@ -1,0 +1,13 @@
+diff --git a/Tools/AP_Bootloader/support.cpp b/Tools/AP_Bootloader/support.cpp
+index 1bddce23c4..e4d12c4db0 100644
+--- a/Tools/AP_Bootloader/support.cpp
++++ b/Tools/AP_Bootloader/support.cpp
+@@ -425,7 +425,7 @@ int strcmp(const char *s1, const char *s2)
+ }
+ 
+ //simple variant of std c function to reduce used flash space
+-size_t strlen(const char *s1)
++__attribute__((optimize("O0"))) size_t strlen(const char *s1)
+ {
+     size_t ret = 0;
+     while (*s1++) ret++;

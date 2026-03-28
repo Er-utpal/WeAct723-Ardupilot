@@ -1,0 +1,38 @@
+diff --git a/libraries/AP_HAL_ChibiOS/AnalogIn.cpp b/libraries/AP_HAL_ChibiOS/AnalogIn.cpp
+index ced3aa0b02..b0975c0d6b 100644
+--- a/libraries/AP_HAL_ChibiOS/AnalogIn.cpp
++++ b/libraries/AP_HAL_ChibiOS/AnalogIn.cpp
+@@ -399,7 +399,11 @@ uint8_t AnalogIn::get_adc_index(ADCDriver* adcp)
+     }
+ #endif
+ #if defined(HAL_ANALOG3_PINS)
++#ifdef ADCD3
+     if (adcp == &ADCD3) {
++#else
++    if (false) {
++#endif
+         return 2;
+     }
+ #endif
+@@ -465,7 +469,9 @@ void AnalogIn::setup_adc(uint8_t index)
+ #endif
+ #if defined(HAL_ANALOG3_PINS)
+     case 2:
++#ifdef ADCD3
+         adcp = &ADCD3;
++#endif
+         break;
+ #endif
+     default:
+@@ -522,9 +528,11 @@ void AnalogIn::setup_adc(uint8_t index)
+     adcStart(adcp, NULL);
+ #if HAL_WITH_MCU_MONITORING
+     if (index == 2) {
++#ifdef ADCD3
+         adcSTM32EnableVREF(&ADCD3);
+         adcSTM32EnableTS(&ADCD3);
+         adcSTM32EnableVBAT(&ADCD3);
++#endif
+     }
+ #endif
+     memset(&adcgrpcfg[index], 0, sizeof(adcgrpcfg[index]));
