@@ -125,15 +125,33 @@ git submodule update --init --recursive
 python3 -m venv venv-ardupilot
 source venv-ardupilot/bin/activate
 pip install empy==3.3.4 pexpect future pymavlink MAVProxy
+git checkout 5b498fca139f776c32234b2eff22e522337f2372
 ```
 
 ### 2. Apply Patches
 
 ```bash
-cd ~/ardupilot
+#Step 1: clone Directory
+cd ~
 git clone https://github.com/Er-utpal/WeAct723-ArduPilot.git
 
-bash WeAct723-ArduPilot/scripts/apply_patches.sh
+# Step 2: Copy board definition files
+mkdir -p ~/ardupilot1/libraries/AP_HAL_ChibiOS/hwdef/WeActH723
+cp ~/WeActH723-Ardupilot/hwdef/WeAct723/hwdef.dat ~/ardupilot/libraries/AP_HAL_ChibiOS/hwdef/WeActH723/
+cp ~/WeActH723-Ardupilot/hwdef/WeAct723/hwdef-bl.dat ~/ardupilot/libraries/AP_HAL_ChibiOS/hwdef/WeActH723/
+
+# Step 5: Apply all patches
+cd ~/ardupilot
+git apply ~/WeAct723-Ardupilot/patches/STM32H723xx.py.patch
+git apply ~/WeAct723-Ardupilot/patches/stm32h7_type2_mcuconf.h.patch
+git apply ~/WeAct723-Ardupilot/patches/AnalogIn.cpp.patch
+git apply ~/WeAct723-Ardupilot/patches/board.c.patch
+git apply ~/WeAct723-Ardupilot/patches/support.cpp.patch
+
+# ChibiOS patch (submodule)
+cd ~/ardupilot/modules/ChibiOS
+git apply ~/WeAct723-Ardupilot/patches/hal_usb_lld.c.patch
+cd ~/ardupilot
 ```
 
 > **Note:** The `patches/` directory must contain patch files generated with `scripts/generate_patches.sh`. See [patches/README.md](patches/README.md) for manual patch instructions.
