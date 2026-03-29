@@ -140,7 +140,7 @@ mkdir -p ~/ardupilot1/libraries/AP_HAL_ChibiOS/hwdef/WeActH723
 cp ~/WeActH723-Ardupilot/hwdef/WeAct723/hwdef.dat ~/ardupilot/libraries/AP_HAL_ChibiOS/hwdef/WeActH723/
 cp ~/WeActH723-Ardupilot/hwdef/WeAct723/hwdef-bl.dat ~/ardupilot/libraries/AP_HAL_ChibiOS/hwdef/WeActH723/
 
-# Step 5: Apply all patches
+# Step 3: Apply all patches
 cd ~/ardupilot
 git apply ~/WeAct723-Ardupilot/patches/STM32H723xx.py.patch
 git apply ~/WeAct723-Ardupilot/patches/stm32h7_type2_mcuconf.h.patch
